@@ -1,42 +1,58 @@
-"use client";
-import { useState } from "react";
+"use client"
+
+import { useState } from "react"
+import "react-chat-elements/dist/main.css"
+import { MessageBox } from "react-chat-elements"
 
 export default function Chat() {
-    const [messages, setMessages] = useState<{ role: string; content: string}[]>([]);
-    const [input, setInput] = useState("");
+    const [messages, setMessages] = useState<{ role: string, content: string}[]>([])
+    const [input, setInput] = useState("")
 
     async function sendMessage() {
-        if(!input.trim()) return;
+        if(!input.trim()) return
+
+        const user_input = input
         
         //Adiciona msg do user no estado local
-        setMessages((prev) => [...prev, {role: "user", content: input}]);
+        setMessages((prev) => [...prev, {role: "user", content: user_input}])
+
+        setInput("")
 
         const res = await fetch("http://127.0.0.1:8000/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ question: input }),
-        });
+        })
 
-        const data = await res.json();
+        const data = await res.json()
 
         // Adiciona resposta do agente no chat
-        setMessages((prev) => [...prev, { role: "agent", content: data.answer }]);
+        setMessages((prev) => [...prev, { role: "agent", content: data.answer }])
 
-        setInput("");
+        
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+      if(e.key === "Enter") {
+        e.preventDefault()
+        sendMessage()
+      }
     }
 
     return (
-    <div className="flex flex-col max-w-md mx-auto p-4 border rounded-2xl shadow-md">
+    <div className="flex flex-col w-lg mx-auto p-4 border rounded-2xl shadow-md">
       <div className="flex-1 overflow-y-auto space-y-2 mb-4">
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`p-2 rounded-xl  ${
-              msg.role === "user" ? "bg-blue-200 self-end text-red-500" : "bg-gray-200 self-start text-green-500"
-            }`}
-          >
-            {msg.content}
-          </div>
+            <MessageBox
+                key={i}
+                position={msg.role === "user" ? "right" : "left"}
+                type={'text'}
+                title={msg.role === "user" ? "Você" : "Assistente"}
+                titleColor="blue"
+                text={msg.content}
+                notch={false}
+                className="text-black no-underline cursor-default pointer-events-none"
+            />
         ))}
       </div>
 
@@ -45,6 +61,7 @@ export default function Chat() {
           className="flex-1 border rounded-l-xl p-2"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Digite sua pergunta..."
         />
         <button
@@ -55,5 +72,5 @@ export default function Chat() {
         </button>
       </div>
     </div>
-  );
+  )
 }
