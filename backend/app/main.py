@@ -46,6 +46,7 @@ def chat(question: Question):
     try:
         resp = agent.run(question.question)
         return { "answer": resp.content}
+        #return { "anwer ": "Bela pergunta."}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}
 
