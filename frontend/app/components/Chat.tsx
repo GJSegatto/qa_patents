@@ -47,21 +47,21 @@ export default function Chat() {
             <h3 className="text-md font-semibold">Inicie uma conversa fazendo uma pergunta sobre patentes...</h3>
           </div>
         ) : (
-          <div className="space-y-4 overflow-y-auto custom-scrollbar [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-blue-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-blue-400">
+          <div className="space-y-4 overflow-y-auto custom-scrollbar [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-800 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-gray-800">
             {messages.map((msg, i) => (
               <div 
                 key={i} 
-                className={`w-full flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`w-full flex px-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className="max-w-[80%] w-auto">
+                <div className="max-w-[70%] w-auto">
                   {msg.role === "agent" ? (
                     // Mensagem do agente com Markdown
-                    <div className={`p-4 rounded-lg ${msg.role === "user" ? "bg-blue-500 ml-auto" : "bg-gray-100 dark:bg-gray-800"}`}>
-                      <div className="text-sm font-semibold mb-2 text-gray-600 dark:text-gray-400">
+                    <div className="p-4 rounded-lg bg-gray-800">
+                      <div className="text-sm font-semibold mb-2 text-gray-400">
                         Assistente
                       </div>
-                      <ReactMarkdown 
-                        //className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0"
+                      <div className="text-white">
+                        <ReactMarkdown 
                         components={{ 
                           p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                           h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
@@ -73,9 +73,9 @@ export default function Chat() {
                           code: ({ children, className }) => {
                             const isInline = !className;
                             return isInline ? (
-                              <code className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm">{children}</code>
+                              <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">{children}</code>
                             ) : (
-                              <code className="block bg-gray-200 dark:bg-gray-700 p-2 rounded text-sm overflow-x-auto">{children}</code>
+                              <code className="block bg-gray-200 p-2 rounded text-sm overflow-x-auto">{children}</code>
                             );
                           },
                           strong: ({ children }) => <strong className="font-bold">{children}</strong>,
@@ -84,22 +84,17 @@ export default function Chat() {
                       >
                         {msg.content}
                       </ReactMarkdown>
+                      </div>
                     </div>
                   ) : (
-                    // Mensagem do usuário com MessageBox original
-                    <MessageBox
-                        position={msg.role === "user" ? "right" : "left"}
-                        type={'text'}
-                        title={msg.role === "user" ? "Você" : "Assistente"}
-                        titleColor="#1f2937"
-                        text={msg.content}
-                        notch={false}
-                        styles={{
-                          color: "#1f2937",
-                          backgroundColor: "#4382e9ff"
-                        }}
-                        className="text-foreground no-underline cursor-default pointer-events-none"
-                    />
+                    <div className="p-4 rounded-lg bg-gray-800">
+                      <div className="text-sm font-semibold mb-2 text-gray-400">
+                        Você
+                      </div>
+                      <div className="text-white">
+                        {msg.content}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -108,21 +103,17 @@ export default function Chat() {
         )}
       </div>
       
-      <div className="p-4 border-t">
+      <div className="pt-4 border-t">
         <div className="flex shadow-sm border rounded-xl overflow-hidden">
           <input
             className="flex-1 p-3 bg-background text-foreground border-0 outline-none"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Digite sua pergunta sobre patentes..."
+            placeholder="Digite sua pergunta..."
           />
           <button
-            className="bg-primary text-primary-foreground px-6 py-3 hover:bg-primary/90 transition-colors font-bold"
-            style={{
-              color: "#1f2937",
-              backgroundColor: "#4382e9ff"
-            }}
+            className="text-primary-foreground px-6 py-3 hover:bg-primary/90 transition-colors font-bold cursor-pointer bg-gray-800 text-sm font-semibold text-white"
             onClick={sendMessage}
           >
             Enviar

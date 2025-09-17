@@ -1,34 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import uvicorn
 
-from agno.agent import Agent
-from agno.models.openai import OpenAIChat
-from agno.memory.v2.db.sqlite import SqliteMemoryDb
-from agno.memory.v2.memory import Memory
-from agno.tools.reasoning import ReasoningTools
+import asyncio
+from fastmcp import Client
 
-memory = Memory(
-    model=OpenAIChat(id="gpt-5-nano"),
-    db=SqliteMemoryDb(table_name="user_memories", db_file="tmp/agent.db"),
-    delete_memories=True,
-    clear_memories=True
-)
-
-agent = Agent(
-    model=OpenAIChat(id="gpt-5-nano"),
-    tools=[
-        ReasoningTools(add_instructions=True),
-    ],
-    user_id="Gabriel",
-    instructions="Seja direto nas suas respostas.",
-    description="Você é um assistente inteligente prestativo.",
-    markdown=True,
-    memory=memory,
-    enable_agentic_memory=True,
-)
-
+client = Client("http://localhost:9000/mcp")
 app = FastAPI()
+
+async def read_resource():
+    async with client:
+        # Lendo um recurso
+        resource_data = await client.read_resource("agent://status")
+        print("Recurso do agente:", resource_data)
 
 app.add_middleware(
     CORSMiddleware, 
@@ -41,15 +26,30 @@ app.add_middleware(
 class Question(BaseModel):
     question: str
 
-@app.post("/chat")
-def chat(question: Question):
-    try:
-        resp = agent.run(question.question)
-        return { "answer": resp.content}
-        #return { "anwer ": "Bela pergunta."}
-    except Exception as e:
-        return {"answer": f"Erro: {str(e)}"}
-
 @app.get("/")
-def read_root():
-    return {"msg": "Backend online!"}
+async def read_root():
+    async with client:
+        try:
+            result = await client.call_tool("get_server_status")
+            return {"status": result.data}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    
+@app.post("/chat")
+async def chat(question: Question):
+    async with client:
+        try:
+            answer = await client.call_tool("chat", {"question": question.question})
+            return { "answer": answer.data }
+        except Exception as e:
+            return {"answer": f"Erro: {str(e)}"}
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
