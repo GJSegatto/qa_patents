@@ -42,10 +42,5 @@ def get_server_status() -> str:
     """
     return "Servidor MCP online e funcionando!"
 
-@mcp.resource("agent://status")
-def get_agent_resource() -> str:
-    """Recurso que retorna informações sobre o agente."""
-    return "Agente configurado com OpenAI GPT-5-nano e ferramentas de raciocínio"
-
 if __name__ == "__main__":
     mcp.run(transport="http", port=9000)

@@ -3,17 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
-import asyncio
 from fastmcp import Client
 
 client = Client("http://localhost:9000/mcp")
 app = FastAPI()
-
-async def read_resource():
-    async with client:
-        # Lendo um recurso
-        resource_data = await client.read_resource("agent://status")
-        print("Recurso do agente:", resource_data)
 
 app.add_middleware(
     CORSMiddleware, 
