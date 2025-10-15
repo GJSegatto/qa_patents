@@ -9,7 +9,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware, 
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.0.100:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -31,11 +31,12 @@ async def read_root():
         ]
     }
        
-@app.post("/chat")
+@app.post("/chat") 
 async def chat(question: Question):
     try:
         # Usar o workflow multi-agente
-        response = process_patent_query(question.question)
+        #response = process_patent_query(question.question)
+        response = "ola"
         return {"answer": response}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}

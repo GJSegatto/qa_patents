@@ -20,16 +20,27 @@ export default function Chat() {
 
         setInput("")
 
-        const res = await fetch("http://127.0.0.1:8000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: input }),
-        })
+        try {
+          const res = await fetch("http://127.0.0.1:8000/chat", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify({ question: user_input }),
+          })
 
-        const data = await res.json()
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`)
+          }
 
-        // Adiciona resposta do agente no chat
-        setMessages((prev) => [...prev, { role: "agent", content: data.answer }])
+          const data = await res.json()
+          setMessages((prev) => [...prev, { role: "agent", content: data.answer }])
+
+        } catch (error) {
+          //alert(error)
+          setMessages((prev) => [...prev, { role: "agent", content: "Erro: Não foi possível conectar com o servidor" }])
+        }
     }
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
