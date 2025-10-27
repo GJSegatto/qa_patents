@@ -30,13 +30,13 @@ async def read_root():
             "4. Avaliação da qualidade (LLM-as-a-Judge)"
         ]
     }
-       
+import asyncio
 @app.post("/chat") 
 async def chat(question: Question):
     try:
-        # Usar o workflow multi-agente
-        #response = process_patent_query(question.question)
-        response = "ola"
+        response = process_patent_query(question.question)
+        #await asyncio.sleep(3)
+        #response = f"Olá, recebi sua pergunta: {question.question}."
         return {"answer": response}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}

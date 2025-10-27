@@ -9,9 +9,10 @@ import ReactMarkdown from 'react-markdown'
 export default function Chat() {
     const [messages, setMessages] = useState<{ role: string, content: string}[]>([])
     const [input, setInput] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
 
     async function sendMessage() {
-        if(!input.trim()) return
+        if(!input.trim() || isLoading) return
 
         const user_input = input
         
@@ -19,6 +20,7 @@ export default function Chat() {
         setMessages((prev) => [...prev, {role: "user", content: user_input}])
 
         setInput("")
+        setIsLoading(true)
 
         try {
           const res = await fetch("http://127.0.0.1:8000/chat", {
@@ -38,22 +40,38 @@ export default function Chat() {
           setMessages((prev) => [...prev, { role: "agent", content: data.answer }])
 
         } catch (error) {
-          //alert(error)
           setMessages((prev) => [...prev, { role: "agent", content: "Erro: Não foi possível conectar com o servidor" }])
+        } finally {
+          setIsLoading(false)
         }
     }
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-      if(e.key === "Enter") {
+      if(e.key === "Enter" && !isLoading) {
         e.preventDefault()
         sendMessage()
       }
     }
 
+    const LoadingAnimation = () => (
+      <div className="p-4 rounded-lg bg-gray-800">
+        <div className="text-sm font-semibold mb-4 text-gray-400">
+          Assistente
+        </div>
+        <div className="flex items-center space-x-1">
+          <div className="flex space-x-1">
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+          </div>
+        </div>
+      </div>
+    )
+
     return (
     <div className="flex flex-col h-full w-full p-4">
         <div className="border rounded-2xl p-4 h-full overflow-hidden flex flex-col mb-4">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !isLoading ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             <h3 className="text-md font-semibold">Inicie uma conversa fazendo uma pergunta sobre patentes...</h3>
           </div>
@@ -110,6 +128,15 @@ export default function Chat() {
                 </div>
               </div>
             ))}
+
+            {isLoading && (
+              <div className="w-full flex px-2 justify-start">
+                <div className="max-w-[70%] w-auto">
+                  <LoadingAnimation />
+                </div>
+              </div>
+            )}
+
           </div>
         )}
       </div>
@@ -121,11 +148,17 @@ export default function Chat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Digite sua pergunta..."
+            placeholder={isLoading ? "Aguarde a resposta..." : "Digite sua pergunta..."}
+            disabled={isLoading}
           />
           <button
-            className="text-primary-foreground px-6 py-3 hover:bg-primary/90 transition-colors font-bold cursor-pointer bg-gray-800 text-sm font-semibold text-white"
+            className={`text-primary-foreground bg-gray-800 px-6 py-3 transition-colors font-bold text-sm font-semibold text-white ${
+              isLoading 
+                ? "cursor-not-allowed" 
+                : "hover:bg-primary/90 cursor-pointer"
+            }`}
             onClick={sendMessage}
+            disabled={isLoading}
           >
             Enviar
           </button>
