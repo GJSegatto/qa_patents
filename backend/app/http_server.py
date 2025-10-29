@@ -38,11 +38,9 @@ import asyncio
 @app.post("/chat") 
 async def chat(question: Question):
     try:
-        response = await process_patent_question(question.question)
-        #response = palavra
-        print(response)
-        print(type(response))
-        return {"answer": response.get("final_answer")}
+        #response = await process_patent_question(question.question)
+        response = palavra
+        return {"answer": response}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}
 

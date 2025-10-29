@@ -10,6 +10,7 @@ export default function Chat() {
     const [messages, setMessages] = useState<{ role: string, content: string}[]>([])
     const [input, setInput] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const messagesEndRef = useRef<HTMLDivElement>(null)
 
     async function sendMessage() {
         if(!input.trim() || isLoading) return
@@ -52,6 +53,14 @@ export default function Chat() {
         sendMessage()
       }
     }
+
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+
+    useEffect(() => {
+      scrollToBottom()
+    }, [messages, isLoading])
 
     const LoadingAnimation = () => (
       <div className="p-4 rounded-lg bg-gray-800">
@@ -136,7 +145,7 @@ export default function Chat() {
                 </div>
               </div>
             )}
-
+            <div ref={messagesEndRef}/>
           </div>
         )}
       </div>
