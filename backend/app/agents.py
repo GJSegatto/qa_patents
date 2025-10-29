@@ -8,7 +8,8 @@ from fastmcp import Client
 from response_models import (
     QuestionAnalyserResponse,
     PatentSearcherResponse,
-    ResponseFormulatorResponse
+    ResponseFormulatorResponse,
+    QualityJudgeResponse
 )
 
 client = Client("mcp_server.py")
@@ -41,6 +42,7 @@ question_analyzer_agent: Agent = Agent(
     tools=[ReasoningTools()],
     instructions=QUESTION_ANALYZER_INSTRUCTION,
     description="Especialista em análise semântica de consultas sobre patentes",
+    output_schema=QuestionAnalyserResponse,
     markdown=False,
     debug_mode=False
 )
@@ -55,9 +57,9 @@ patent_searcher_agent: Agent = Agent(
     tool_call_limit=2,
     instructions=PATENT_SEARCHER_INSTRUCTION,
     description="AI agent, specialist in patent searching.",
+    input_schema=QuestionAnalyserResponse,
     output_schema=PatentSearcherResponse,
     markdown=False,
-    #debug_mode=True
 )
 
 response_formulator_agent: Agent = Agent(
@@ -78,7 +80,9 @@ quality_judge_agent: Agent = Agent(
     tools=[ReasoningTools()],
     instructions=QUALITY_JUDGE_INSTRUCTION,
     description="Juiz especializado em avaliar qualidade de respostas sobre patentes",
-    markdown=False,
+    input_schema=ResponseFormulatorResponse,
+    output_schema=QualityJudgeResponse,
+    markdown=True,
     debug_mode=False
 )
 

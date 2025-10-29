@@ -2,6 +2,7 @@ import asyncio
 from agno.utils.log import logger
 from agno.workflow import Step, Workflow, StepInput
 from agno.db.sqlite import SqliteDb
+from typing import Dict, Any
 
 from agents import (
     question_analyzer_agent,
@@ -44,18 +45,29 @@ patent_analysis_workflow = Workflow(
         db_file="tmp/workflow.db"
     ),
     steps=[
-        #analyze_question_step,
+        analyze_question_step,
         search_patents_step,
-        formulate_response_step
-        #judging_step
-    ],
-    debug_mode=True
+        formulate_response_step,
+        judging_step
+    ]
 )
+
+async def process_patent_question(user_question: str) -> Dict[str, Any]:
+    try:
+        resp = await patent_analysis_workflow.arun(user_question)
+        if resp and hasattr(resp, 'content'):
+            resp_dict = resp.content.model_dump()
+            return resp_dict
+        else:
+            return {"error": "Resposta vazia!"}
+    except Exception as e:
+        logger.error("Erro no WORKFLOW")
+        return {"error": str(e)}
 
 # TESTE LOCAL
 if __name__ == "__main__":
     # Teste do workflow
-    test_query = "Retorne um texto com informações de patentes retiradas do servidor MCP"
+    test_query = "O que foi patenteado nos últimos 10 anos na área do futebol?"
     
     print("🚀 Testando workflow de análise de patentes...")
     

@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
+import json
 
-from workflows import process_patent_query
+from workflows import process_patent_question
 
 app = FastAPI()
 
@@ -30,14 +31,18 @@ async def read_root():
             "4. Avaliação da qualidade (LLM-as-a-Judge)"
         ]
     }
+
+from testinho import palavra
 import asyncio
+
 @app.post("/chat") 
 async def chat(question: Question):
     try:
-        response = process_patent_query(question.question)
-        #await asyncio.sleep(3)
-        #response = f"Olá, recebi sua pergunta: {question.question}."
-        return {"answer": response}
+        response = await process_patent_question(question.question)
+        #response = palavra
+        print(response)
+        print(type(response))
+        return {"answer": response.get("final_answer")}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}
 
