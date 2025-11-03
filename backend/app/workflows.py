@@ -1,6 +1,7 @@
 import asyncio
 from agno.utils.log import logger
-from agno.workflow import Step, Workflow, StepInput
+from agno.workflow import Step, Workflow, Loop
+from agno.workflow.types import StepOutput
 from agno.db.sqlite import SqliteDb
 from typing import Dict, Any
 
@@ -37,6 +38,18 @@ judging_step = Step(
     description="Julga a qualidade da resposta de acordo com parâmetros previamente definidos."
 )
 
+def quality_evaluator(output: StepOutput) -> bool:
+    """
+    Avalia se a nota da resposta gerada é boa o suficiente
+    para ser encaminhada ao usuário.
+    """
+
+    if not output:
+        return False
+    
+    print(type(output[-1].content))
+    return True
+
 patent_analysis_workflow = Workflow(
     name="Patent_Analysis_Workflow",
     description="Workflow do processo completo de análise de patentes e geração de resposta ao usuário.",
@@ -46,9 +59,12 @@ patent_analysis_workflow = Workflow(
     ),
     steps=[
         analyze_question_step,
-        search_patents_step,
-        formulate_response_step,
-        judging_step
+        Loop(
+            name="answer_development",
+            steps=[search_patents_step, formulate_response_step, judging_step],
+            end_condition=quality_evaluator,
+            max_iterations=3,
+        )
     ]
 )
 

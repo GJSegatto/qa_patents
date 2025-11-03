@@ -32,14 +32,10 @@ async def read_root():
         ]
     }
 
-from testinho import palavra
-import asyncio
-
 @app.post("/chat") 
 async def chat(question: Question):
     try:
-        #response = await process_patent_question(question.question)
-        response = palavra
+        response = await process_patent_question(question.question)
         return {"answer": response}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}

@@ -16,14 +16,7 @@ def buscar_patentes(query: str = "") -> str:
         Resultados da busca de patentes em formato JSON
     """
     try:
-        # Aqui você vai integrar com sua API de busca de patentes
-        # Por enquanto, simulando uma resposta
-        
-        # Exemplo de chamada para sua API:
-        # response = requests.get(f"http://sua-api-patentes.com/search?q={query}")
-        # return response.json()
-        
-        # Simulação temporária:
+        # Por enquanto, simulando uma resposta:
         fake_results = {
             "results": [
                 {
