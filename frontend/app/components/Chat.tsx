@@ -6,6 +6,7 @@ import MarkdownRenderer from "./chat/MarkdownRenderer";
 import LoadingBubble from "./chat/LoadingBubble";
 import ChatInput from "./chat/ChatInput";
 import useTypewriter from "./chat/useTypewriter";
+import { LLMModelsList } from "./llm-models-list";
 
 type Msg = { role: "user" | "agent"; content: string };
 
@@ -13,9 +14,9 @@ export default function Chat() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("gpt-5-nano")
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   const fullAnswerRef = useRef<string>("");
 
   const {
@@ -55,7 +56,10 @@ export default function Chat() {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ question: userText }),
+        body: JSON.stringify({ 
+          question: userText,
+          model: selectedModel
+        }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -111,7 +115,13 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-full w-full p-4">
-      <div className="border rounded-2xl p-4 h-full overflow-hidden flex flex-col mb-4 bg-card text-card-foreground">
+      <div className="border rounded-2xl p-2 h-full overflow-hidden flex flex-col mb-4 bg-card text-card-foreground">
+        <div className="">
+          <LLMModelsList
+            selectedModel={selectedModel}
+            onModelSelect={setSelectedModel}
+          />
+        </div>
         {messages.length === 0 && !isLoading ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             <h3 className="text-md font-semibold">
@@ -152,20 +162,22 @@ export default function Chat() {
         )}
       </div>
 
-      <div className="pt-4 border-t">
-        <ChatInput
-          value={input}
-          onChange={setInput}
-          onSend={send}
-          onSkip={skipTyping}
-          isTyping={isTyping}
-          disabled={isLoading || isTyping}
-          placeholder={
-            isLoading || isTyping
-              ? "Aguarde a resposta..."
-              : "Digite sua pergunta..."
-          }
-        />
+      <div className="pt-4 border-t flex items-center gap-4">
+        <div className="flex-1">
+          <ChatInput
+            value={input}
+            onChange={setInput}
+            onSend={send}
+            onSkip={skipTyping}
+            isTyping={isTyping}
+            disabled={isLoading || isTyping}
+            placeholder={
+              isLoading || isTyping
+                ? "Aguarde a resposta..."
+                : "Digite sua pergunta..."
+            }
+          />
+        </div>
       </div>
     </div>
   );
