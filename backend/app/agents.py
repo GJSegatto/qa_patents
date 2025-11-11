@@ -1,5 +1,6 @@
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.models.google import Gemini
 from agno.tools.reasoning import ReasoningTools
 from agno.tools import tool
 from agno.utils.log import logger
@@ -11,6 +12,7 @@ from response_models import (
     ResponseFormulatorResponse,
     QualityJudgeResponse
 )
+from os import getenv
 
 client = Client("mcp_server.py")
 
@@ -35,6 +37,34 @@ from prompts import (
     RESPONSE_FORMULATOR_INSTRUCTION,
     QUALITY_JUDGE_INSTRUCTION
 )
+
+def configure_agents(model : str):
+    logger.info("Configurando agentes de acordo.")
+
+    if 'gemini' in model.lower():
+        api_key = getenv('GOOGLE_API_KEY')
+        question_analyzer_agent.model=Gemini(id=model, api_key=api_key)
+        question_analyzer_agent.input_schema=None
+        question_analyzer_agent.output_schema=None
+
+        patent_searcher_agent.model=Gemini(id=model, api_key=api_key)   
+        patent_searcher_agent.input_schema=None
+        patent_searcher_agent.output_schema=None
+
+        response_formulator_agent.model=Gemini(id=model, api_key=api_key)
+        response_formulator_agent.input_schema=None
+        response_formulator_agent.output_schema=None
+
+        quality_judge_agent.model=Gemini(id=model, api_key=api_key)
+        quality_judge_agent.input_schema=None
+        quality_judge_agent.output_schema=None
+    elif 'gpt' in model.lower():
+        api_key = getenv('OPENAI_API_KEY')
+        question_analyzer_agent.model=OpenAIChat(id=model, api_key=api_key)
+        patent_searcher_agent.model=OpenAIChat(id=model, api_key=api_key)
+        response_formulator_agent.model=OpenAIChat(id=model, api_key=api_key)
+        quality_judge_agent.model=OpenAIChat(id=model, api_key=api_key)
+    
 
 question_analyzer_agent: Agent = Agent(
     name="QueryAnalyzer",

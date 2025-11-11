@@ -16,8 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Question(BaseModel):
+class Requisition(BaseModel):
     question: str
+    model: str
 
 @app.get("/")
 async def read_root():
@@ -33,9 +34,13 @@ async def read_root():
     }
 
 @app.post("/chat") 
-async def chat(question: Question):
+async def chat(req: Requisition):
     try:
-        response = await process_patent_question(question.question)
+        response = await process_patent_question(user_question=req.question, model=req.model)
+
+        if isinstance(response, dict) and "final_answer" in response:
+            return {"answer": response["final_answer"]}
+        
         return {"answer": response}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}

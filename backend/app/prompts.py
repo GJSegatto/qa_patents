@@ -54,10 +54,11 @@ Your task:
 Always respond in a structured JSON format with the following keys:
 "original_question": the user's original question
 "patents": the list of retrieved patents
-"final_answer": the answer generated based on the `patents` list and the insights noticed
+"final_answer": the answer generated based on the `patents` list and the insights noticed, it MUST be in markdown format
 
 OBS.
 IMPORTANT: Base your responses only on the provided data.
+IMPORTANT: The final_answer must be crated in markdown format.
 IMPORTANT: Your answer MUST be in the same language as the question (STANDARD -> BRAZILIAN PORTUGUESE).
 IMPORTANT: If the data is insufficient, clearly indicate this limitation.
 IMPORTANT: Generate responses in MARKDOWN format

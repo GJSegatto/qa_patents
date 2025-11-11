@@ -1,7 +1,7 @@
-import asyncio
+import asyncio, json, re
 from agno.utils.log import logger
 from agno.workflow import Step, Workflow, Loop
-from agno.workflow.types import StepOutput
+from agno.workflow.types import StepInput, StepOutput
 from agno.db.sqlite import SqliteDb
 from typing import Dict, Any
 
@@ -12,6 +12,7 @@ from agents import (
     quality_judge_agent
 )
 
+from agents import configure_agents
 # FUNÇÕES DE PROCESSAMENTO
 
 analyze_question_step = Step(
@@ -38,17 +39,23 @@ judging_step = Step(
     description="Julga a qualidade da resposta de acordo com parâmetros previamente definidos."
 )
 
-def quality_evaluator(output: StepOutput) -> bool:
+def quality_evaluator(step_input: StepInput) -> bool:
     """
     Avalia se a nota da resposta gerada é boa o suficiente
     para ser encaminhada ao usuário.
     """
+    try:
+        if not step_input:
+            return True
+        
+        judge_resp = step_input[-1].content
 
-    if not output:
+        if hasattr(judge_resp, "overall_score") and float(getattr(judge_resp, "overall_score")) >= 7:
+            return True
+        else:
+            return False
+    except:
         return False
-    
-    print(type(output[-1].content))
-    return True
 
 patent_analysis_workflow = Workflow(
     name="Patent_Analysis_Workflow",
@@ -65,17 +72,39 @@ patent_analysis_workflow = Workflow(
             end_condition=quality_evaluator,
             max_iterations=3,
         )
-    ]
+    ],
+    debug_mode=False
 )
 
-async def process_patent_question(user_question: str) -> Dict[str, Any]:
+async def process_patent_question(user_question: str, model: str) -> Dict[str, Any]:
+    configure_agents(model=model)
     try:
         resp = await patent_analysis_workflow.arun(user_question)
-        if resp and hasattr(resp, 'content'):
-            resp_dict = resp.content.model_dump()
-            return resp_dict
-        else:
-            return {"error": "Resposta vazia!"}
+        content = getattr(resp, "content", resp)
+
+        if hasattr(content, "final_answer"):
+            final = getattr(content, "final_answer")
+            return {"final_answer": final}
+
+        if isinstance(content, dict):
+            return {"final_answer": content.get("final_answer")}
+
+        if isinstance(content, str):
+            s = content.strip()
+            s = re.sub(r"^```(?:json)?\s*", "", s, flags=re.I)
+            s = re.sub(r"\s*```$", "", s)
+
+            try:
+                resp_dict = json.loads(s)
+                return {"final_answer": resp_dict.get("final_answer")}
+            except json.JSONDecodeError:
+                m = re.search(r'"final_answer"\s*:\s*"(?P<fa>.*?)"', s, re.S)
+                if m:
+                    fa = bytes(m.group("fa"), "utf-8").decode("unicode_escape")
+                    return {"final_answer": fa}
+                return {"final_answer": s}
+
+        return {"error": "Formato de resposta do modelo não reconhecido"}
     except Exception as e:
         logger.error("Erro no WORKFLOW")
         return {"error": str(e)}
