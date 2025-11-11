@@ -1,44 +1,72 @@
 from mcp.server.fastmcp import FastMCP
 from typing import Any
-import json
+import json, httpx
+from os import getenv
 
 mcp = FastMCP("Patent Tools MCP Server")
 
 @mcp.tool()
-def buscar_patentes(query: str = "") -> str:
+async def search_patents(query_question: str) -> str:
     """
-    Busca patentes usando a API especializada.
+    Busca patentes usando a API externa.
     
     Args:
-        query: Termo de busca para patentes
+        query: Texto utlizado para a busca na API
 
     Returns:
-        Resultados da busca de patentes em formato JSON
+        Array de JSON com as patentes similares à query utilizada
     """
     try:
-        # Por enquanto, simulando uma resposta:
-        fake_results = {
-            "results": [
-                {
-                    "id": "US123456",
-                    "title": f"Patent related to soccer",
-                    "abstract": f"This patent describes innovations in ball technology...",
-                    "assignee": "TechFoot Company Inc.",
-                    "publication_date": "2023-10-01"
-                },
-                {
-                    "id": "US789012",
-                    "title": f"Advanced scouts System",
-                    "abstract": f"Novel approach to soccer scouts implementation...",
-                    "assignee": "Innovation Corp.",
-                    "publication_date": "2023-09-15"
-                }
-            ]
+        api_key = getenv('IEL_API_KEY')
+
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {api_key}"
         }
-        return json.dumps(fake_results)
-        
+
+        # Generate embedding
+        async with httpx.AsyncClient() as client:
+            req_embed = await client.post(
+                url="http://212.85.22.109:8001/embed",
+                json={'text': query_question},
+                headers=headers,
+                follow_redirects=True
+            )
+
+            try:
+                req_embed.raise_for_status()
+            except httpx.HTTPStatusError:
+                return json.dumps({"error": "embed_request_failed", "status": req_embed.status_code, "body": req_embed.text})
+
+            embed_dict = json.loads(req_embed.text)
+            embedding = embed_dict.get("embeddings")
+
+            if not embedding:
+                return json.dumps({"error": "no_embedding_in_response"})
+
+            req_sim = await client.post(
+                url="http://212.85.22.109:8001/patents/similarity",
+                json={"embedding": embedding[0]},
+                headers=headers
+            )
+            
+            try:
+                req_sim.raise_for_status()
+            except httpx.HTTPStatusError:
+                return json.dumps({"error": "sim_request_failed", "status": req_sim.status_code, "body": req_sim.text})
+            
+            sim_dict = json.loads(req_sim.text)
+            patents = sim_dict.get("similar_patents")
+
+            if patents is None:
+                return json.dumps({"error": "no_similar_patents"})
+            
+            return json.dumps({"patents": patents}, ensure_ascii=False)
+
     except Exception as e:
         return json.dumps({"error": str(e)})
 
+import asyncio
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    a = asyncio.run(search_patents("What are the trends in industrial machinery for food manufacturing?"))
+    print(a)
