@@ -52,7 +52,7 @@ Available tools:
             ]
 
 Your task:
-1. Elaborate a query_question to call the MCP server with the informations from the last Step
+1. Use the user input as query_question to call the MCP server with the informations from the last Step
 2. (MANDATORY) Use the MCP server to retrieve informations about patents.
 3. Structure the JSON with ALL the data retrieved
 
@@ -109,7 +109,6 @@ Format your evaluation as a JSON object with the following keys:
 - "patents": the list of retrieved patents
 - "scores": a dictionary containing each criterion and its score
 - "overall_score": the average of all scores (0–10)
-- "approved": boolean (true if overall_score ≥ 7.0)
 - "comments": a string with imporvement_suggestions (Optional) 
 - "final_answer": the answer generated in beforehand and evaluated by the judge
 """

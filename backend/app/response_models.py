@@ -35,6 +35,5 @@ class QualityJudgeResponse(BaseModel):
     patents: list[str]
     scores: EvaluationCriteria
     overall_score: float
-    approved: bool
     comments: Optional[str]
     final_answer: str

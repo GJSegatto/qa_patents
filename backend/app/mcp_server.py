@@ -1,23 +1,25 @@
-from mcp.server.fastmcp import FastMCP
-from typing import Any
+from fastmcp import FastMCP
 import json, httpx
 from os import getenv
+from agno.utils.log import logger
 
 mcp = FastMCP("Patent Tools MCP Server")
 
-@mcp.tool()
+@mcp.tool
 async def search_patents(query_question: str) -> str:
     """
     Busca patentes usando a API externa.
     
     Args:
-        query: Texto utlizado para a busca na API
+        query_question: Texto utlizado para a busca na API
 
     Returns:
         Array de JSON com as patentes similares à query utilizada
     """
     try:
         api_key = getenv('IEL_API_KEY')
+        logger.info("COMEÇOU")
+
 
         headers={
             "Accept": "application/json",
@@ -32,7 +34,7 @@ async def search_patents(query_question: str) -> str:
                 headers=headers,
                 follow_redirects=True
             )
-
+            logger.info("EMBED FEITO")
             try:
                 req_embed.raise_for_status()
             except httpx.HTTPStatusError:
@@ -50,6 +52,8 @@ async def search_patents(query_question: str) -> str:
                 headers=headers
             )
             
+            logger.info("PATENTES FEITO")
+
             try:
                 req_sim.raise_for_status()
             except httpx.HTTPStatusError:
@@ -61,12 +65,12 @@ async def search_patents(query_question: str) -> str:
             if patents is None:
                 return json.dumps({"error": "no_similar_patents"})
             
+            logger.info(json.dumps({"patents": patents}, ensure_ascii=False))
+
             return json.dumps({"patents": patents}, ensure_ascii=False)
 
     except Exception as e:
         return json.dumps({"error": str(e)})
-
-import asyncio
+    
 if __name__ == "__main__":
-    a = asyncio.run(search_patents("What are the trends in industrial machinery for food manufacturing?"))
-    print(a)
+    mcp.run(transport="http", host="127.0.0.1", port=9000)

@@ -13,11 +13,13 @@ from response_models import (
     QualityJudgeResponse
 )
 from os import getenv
+from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
 
-client = Client("mcp_server.py")
+client = Client(StreamableHttpTransport(url="http://localhost:9000/mcp"))
 
 @tool
-async def search_patents() -> str:
+async def search_patents(query_question: str) -> str:
     """
     Connect to MCP Server to retrieve patent informations.
 
@@ -28,7 +30,7 @@ async def search_patents() -> str:
         JSON with patent informations
     """
     async with client:
-        response = await client.call_tool("buscar_patentes", {"query": "soccer ball"})
+        response = await client.call_tool(name="search_patents", arguments={"query_question": query_question})
         return response.content
 
 from prompts import (
@@ -81,7 +83,6 @@ patent_searcher_agent: Agent = Agent(
     name="PatentSearcher",
     model=OpenAIChat(id="gpt-5-nano"),
     tools=[
-        #ReasoningTools(),
         search_patents
     ],
     tool_call_limit=2,

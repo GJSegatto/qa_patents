@@ -1,19 +1,16 @@
-import asyncio, json, re
+import asyncio, json, re, httpx
 from agno.utils.log import logger
 from agno.workflow import Step, Workflow, Loop
 from agno.workflow.types import StepInput, StepOutput
 from agno.db.sqlite import SqliteDb
 from typing import Dict, Any
-
 from agents import (
     question_analyzer_agent,
     patent_searcher_agent,
     response_formulator_agent,
     quality_judge_agent
 )
-
 from agents import configure_agents
-# FUNÇÕES DE PROCESSAMENTO
 
 analyze_question_step = Step(
     name="Question_Analyzer",
@@ -57,6 +54,22 @@ def quality_evaluator(step_input: StepInput) -> bool:
     except:
         return False
 
+async def is_api_healthy(step_input: StepInput) -> StepOutput:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                url="http://212.85.22.109:8001/health",
+                headers={"Accept": "application/json"}
+            )
+            content = json.loads(resp.text)
+            if resp.status_code == 200:
+                if content.get("status") == "healthy" and content.get("database") == "healthy":
+                    return StepOutput(content=step_input.input, stop=False)
+            else:
+                return StepOutput(content=f"API respondeu com {resp.status_code}: {resp.text}", stop=True)
+    except Exception as e:
+        return StepOutput (content=f"Erro: {e}",stop=True)
+
 patent_analysis_workflow = Workflow(
     name="Patent_Analysis_Workflow",
     description="Workflow do processo completo de análise de patentes e geração de resposta ao usuário.",
@@ -65,6 +78,7 @@ patent_analysis_workflow = Workflow(
         db_file="tmp/workflow.db"
     ),
     steps=[
+        Step(name="API Healthy Analysis", executor=is_api_healthy),
         analyze_question_step,
         Loop(
             name="answer_development",
@@ -73,7 +87,7 @@ patent_analysis_workflow = Workflow(
             max_iterations=3,
         )
     ],
-    debug_mode=False
+    debug_mode=True
 )
 
 async def process_patent_question(user_question: str, model: str) -> Dict[str, Any]:
@@ -112,7 +126,7 @@ async def process_patent_question(user_question: str, model: str) -> Dict[str, A
 # TESTE LOCAL
 if __name__ == "__main__":
     # Teste do workflow
-    test_query = "O que foi patenteado nos últimos 10 anos na área do futebol?"
+    test_query = "What are the trends in industrial machinery for food manufacturing?"
     
     print("🚀 Testando workflow de análise de patentes...")
     
