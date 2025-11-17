@@ -39,8 +39,9 @@ export default function Chat() {
   });
 
   useEffect(() => {
+    if (isTyping) return
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, isTyping]);
 
   async function chat() {
     if (!input.trim() || isLoading || isTyping) return;
@@ -144,6 +145,7 @@ export default function Chat() {
     
     return md
   }
+
   function skipTyping() {
     if (!isTyping) return;
     const full = fullAnswerRef.current;
