@@ -7,6 +7,7 @@ import LoadingBubble from "./chat/LoadingBubble";
 import ChatInput from "./chat/ChatInput";
 import useTypewriter from "./chat/useTypewriter";
 import { LLMModelsList } from "./llm-models-list";
+import SearchPatent from "./chat/SearchPatent"
 
 type Msg = { role: "user" | "agent"; content: string };
 
@@ -39,9 +40,9 @@ export default function Chat() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading, isTyping]);
+  }, [messages, isLoading]);
 
-  async function send() {
+  async function chat() {
     if (!input.trim() || isLoading || isTyping) return;
 
     const userText = input;
@@ -54,7 +55,7 @@ export default function Chat() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
+          "Accept": "application/json",
         },
         body: JSON.stringify({ 
           question: userText,
@@ -63,13 +64,9 @@ export default function Chat() {
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const data = await res.json();
-      console.debug("[chat] payload:", data);
-
       const answer =
         (typeof data === "string" ? data : data?.answer) ?? data?.message ?? "";
-
       if (!answer) {
         setMessages((prev) => [
           ...prev,
@@ -77,7 +74,6 @@ export default function Chat() {
         ]);
         return;
       }
-
       fullAnswerRef.current = answer;
       setMessages((prev) => [...prev, { role: "agent", content: "" }]);
 
@@ -95,6 +91,28 @@ export default function Chat() {
       ]);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function search(id:string) {
+    if (isLoading || isTyping) return
+    setMessages(prev => [...prev, { role: "user", content: `Pesquisar patente: ${id}` }])
+    setIsLoading(true)
+    try {
+      const res = await fetch("http://127.0.0.1:8000/search", {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ patentId: id })
+      })
+      const data = await res.json()
+      const answer = data?.answer ?? JSON.stringify(data)
+      fullAnswerRef.current = answer
+      setMessages(prev => [...prev, { role: "agent", content: "" }])
+      startTyping(answer)
+    } catch (e) {
+      setMessages(prev => [...prev, { role: "agent", content: "Erro na busca de patente" }])
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -116,7 +134,7 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-full w-full p-4">
       <div className="border rounded-2xl p-2 h-full overflow-hidden flex flex-col mb-4 bg-card text-card-foreground">
-        <div className="">
+        <div className="py-2">
           <LLMModelsList
             selectedModel={selectedModel}
             onModelSelect={setSelectedModel}
@@ -162,12 +180,13 @@ export default function Chat() {
         )}
       </div>
 
-      <div className="pt-4 border-t flex items-center gap-4">
+      <div className="pt-4 border-t flex items-stretch gap-1">
+        <SearchPatent role="user" onSearch={search}/>
         <div className="flex-1">
           <ChatInput
             value={input}
             onChange={setInput}
-            onSend={send}
+            onSend={chat}
             onSkip={skipTyping}
             isTyping={isTyping}
             disabled={isLoading || isTyping}
