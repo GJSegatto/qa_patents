@@ -52,8 +52,6 @@ async def chat(req: ChatRequisition):
 @app.post("/search")
 async def search(req: SearchRequisition):
     try:
-        print(req)
-        print(type(req))
         api_key = getenv('IEL_API_KEY')
 
         headers={
@@ -62,14 +60,22 @@ async def search(req: SearchRequisition):
         }
 
         async with httpx.AsyncClient() as client:
-            req = await client.get(
+            resp = await client.get(
                 url="http://212.85.22.109:8001/patents/"+req.patentId,
                 headers=headers
             )
 
-        patent = json.loads(req.text)
+        try:
+            resp.raise_for_status()
+        except httpx.HTTPStatusError:
+            return json.dumps({"error": "API_request_failed", "status": resp.status_code, "body": resp.text})
 
-        return json.dumps({ "answer": patent})
+        patent = resp.json()
+
+        allowed = ["publication_number", "publication_date", "application_number", "title", "abstract", "description", "orgname"]
+        filtered = {i: patent.get(i) for i in allowed if i in patent}
+
+        return json.dumps({"answer": filtered}, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"error": str(e)})
 

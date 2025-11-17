@@ -104,11 +104,17 @@ export default function Chat() {
         headers: { "Content-Type":"application/json" },
         body: JSON.stringify({ patentId: id })
       })
-      const data = await res.json()
-      const answer = data?.answer ?? JSON.stringify(data)
-      fullAnswerRef.current = answer
+
+      const raw_data = await res.json()
+      
+      const obj_data = JSON.parse(raw_data)
+      if(!obj_data) throw Error
+      
+      const md_data = formatToMarkdown(obj_data.answer)
+
+      fullAnswerRef.current = md_data
       setMessages(prev => [...prev, { role: "agent", content: "" }])
-      startTyping(answer)
+      startTyping(md_data)
     } catch (e) {
       setMessages(prev => [...prev, { role: "agent", content: "Erro na busca de patente" }])
     } finally {
@@ -116,6 +122,28 @@ export default function Chat() {
     }
   }
 
+  function formatToMarkdown(obj: any): string {
+    const defaultAns = "NÃO IDENTIFICADO"
+    
+    const publication_number = obj.publication_number ?? obj.publication_number ?? defaultAns
+    const publication_date = obj.publication_date ?? obj.publication_date ?? defaultAns
+    const application_number = obj.application_number ?? obj.application_number ?? defaultAns
+    const title = obj.title ?? obj.title ?? defaultAns
+    const abstract = obj.abstract ?? obj.abstract ?? defaultAns
+    const description = obj.description ?? obj.description ?? defaultAns
+    const orgname = obj.orgname ?? obj.orgname ?? defaultAns
+    
+    let md = ""
+
+    if (title && publication_number) md += `## ${title} - Número ${publication_number}\n\n`
+    if (orgname) md += `- **Cessionário:** ${orgname}\n`
+    if (publication_date) md += `- **Publicação:** ${publication_date}\n`
+    if (application_number) md += `- **Número de aplicação:** ${application_number}\n`
+    if (abstract) md += `\n### Resumo:\n${abstract}\n`
+    if (description) md += `\n### Descrição:\n${description}`
+    
+    return md
+  }
   function skipTyping() {
     if (!isTyping) return;
     const full = fullAnswerRef.current;

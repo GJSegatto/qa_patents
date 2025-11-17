@@ -51,7 +51,6 @@ export default function SearchPatent({
                                 id="patent_id"
                                 value={patentId? patentId : ""}
                                 onChange={(e) => setPatentId(e.target.value)}
-                                defaultValue=""
                                 className="col-span-2 h-8"
                             />
                         </div>
