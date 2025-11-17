@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
-import json
+import json, httpx
+from os import getenv
 
 from workflows import process_patent_question
 
@@ -16,9 +17,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Requisition(BaseModel):
+class ChatRequisition(BaseModel):
     question: str
     model: str
+
+class SearchRequisition(BaseModel):
+    patentId: str
 
 @app.get("/")
 async def read_root():
@@ -34,7 +38,7 @@ async def read_root():
     }
 
 @app.post("/chat") 
-async def chat(req: Requisition):
+async def chat(req: ChatRequisition):
     try:
         response = await process_patent_question(user_question=req.question, model=req.model)
 
@@ -44,6 +48,30 @@ async def chat(req: Requisition):
         return {"answer": response}
     except Exception as e:
         return {"answer": f"Erro: {str(e)}"}
+
+@app.post("/search")
+async def search(req: SearchRequisition):
+    try:
+        print(req)
+        print(type(req))
+        api_key = getenv('IEL_API_KEY')
+
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+        async with httpx.AsyncClient() as client:
+            req = await client.get(
+                url="http://212.85.22.109:8001/patents/"+req.patentId,
+                headers=headers
+            )
+
+        patent = json.loads(req.text)
+
+        return json.dumps({ "answer": patent})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 if __name__ == "__main__":
     uvicorn.run(

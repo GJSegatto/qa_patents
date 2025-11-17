@@ -44,3 +44,4 @@ __pycache__/
 node_modules/
 .next/
 backend/app/tmp/
+backend/tmp/
