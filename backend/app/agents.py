@@ -4,6 +4,7 @@ from agno.models.google import Gemini
 from agno.tools.reasoning import ReasoningTools
 from agno.tools import tool
 from agno.utils.log import logger
+from agno.workflow import WorkflowAgent
 import asyncio
 from fastmcp import Client
 from response_models import (
@@ -117,6 +118,11 @@ quality_judge_agent: Agent = Agent(
     debug_mode=False
 )
 
+workflow_agent = WorkflowAgent(
+    model=OpenAIChat(id="gpt-5-nano"),
+    num_history_runs = 3
+)
+
 if __name__ == "__main__":
     # Teste do workflow    
     print("🚀 Testando MCPTools")
@@ -125,7 +131,7 @@ if __name__ == "__main__":
         try:
             res = await patent_searcher_agent.arun("Use o servidor MCP para recuperar informações de patentes.")
         except:
-            logger.error("FZADA")
+            logger.error("ERRO")
     
     try:
         asyncio.run(func())

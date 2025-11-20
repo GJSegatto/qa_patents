@@ -8,7 +8,8 @@ from agents import (
     question_analyzer_agent,
     patent_searcher_agent,
     response_formulator_agent,
-    quality_judge_agent
+    quality_judge_agent,
+    workflow_agent
 )
 from agents import configure_agents
 
@@ -73,6 +74,7 @@ async def is_api_healthy(step_input: StepInput) -> StepOutput:
 patent_analysis_workflow = Workflow(
     name="Patent_Analysis_Workflow",
     description="Workflow do processo completo de análise de patentes e geração de resposta ao usuário.",
+    agent=workflow_agent,
     db=SqliteDb(
         session_table="workflow_session",
         db_file="tmp/workflow.db"
@@ -84,10 +86,10 @@ patent_analysis_workflow = Workflow(
             name="answer_development",
             steps=[search_patents_step, formulate_response_step, judging_step],
             end_condition=quality_evaluator,
-            max_iterations=3,
+            max_iterations=2,
         )
     ],
-    debug_mode=True
+    debug_mode=False
 )
 
 async def process_patent_question(user_question: str, model: str) -> Dict[str, Any]:
