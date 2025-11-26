@@ -8,6 +8,7 @@ import ChatInput from "./chat/ChatInput";
 import useTypewriter from "./chat/useTypewriter";
 import LLMModelsList from "./llm-models-list";
 import SearchPatent from "./chat/SearchPatent"
+import AgentBehavior from "./chat/AgentBehavior";
 
 type Msg = { role: "user" | "agent"; content: string };
 
@@ -16,6 +17,7 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("gpt-5-nano")
+  const [behavior, setBehavior] = useState("")
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fullAnswerRef = useRef<string>("");
@@ -60,7 +62,8 @@ export default function Chat() {
         },
         body: JSON.stringify({ 
           question: userText,
-          model: selectedModel
+          model: selectedModel,
+          behavior: behavior
         }),
       });
 
@@ -162,10 +165,14 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-full w-full p-4">
       <div className="border rounded-2xl p-2 h-full overflow-hidden flex flex-col mb-4 bg-card text-card-foreground">
-        <div className="py-2">
+        <div className="flex py-2 justify-between">
           <LLMModelsList
             selectedModel={selectedModel}
             onModelSelect={setSelectedModel}
+          />
+          <AgentBehavior 
+            behavior={behavior}
+            onBehaviorChange={setBehavior}
           />
         </div>
         {messages.length === 0 && !isLoading ? (

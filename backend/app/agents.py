@@ -41,7 +41,7 @@ from prompts import (
     QUALITY_JUDGE_INSTRUCTION
 )
 
-def configure_agents(model : str):
+def configure_agents(model: str, behavior: str):
     logger.info("Configurando agentes de acordo.")
 
     if 'gemini' in model.lower():
@@ -57,6 +57,7 @@ def configure_agents(model : str):
         response_formulator_agent.model=Gemini(id=model, api_key=api_key)
         response_formulator_agent.input_schema=None
         response_formulator_agent.output_schema=None
+        response_formulator_agent.instructions=RESPONSE_FORMULATOR_INSTRUCTION + (behavior if behavior else "")
 
         quality_judge_agent.model=Gemini(id=model, api_key=api_key)
         quality_judge_agent.input_schema=None

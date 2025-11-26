@@ -1,3 +1,4 @@
+# arrumar prompt
 QUESTION_ANALYZER_INSTRUCTION = """
 You are an expert in semantic analysis of patent-related questions.
 
@@ -63,7 +64,7 @@ Always respond in a structured JSON format with the following keys:
 OBS.
 IMPORTANT: Use the data from the previous stage to create a text with rich semantic value
 IMPORTANT: NEVER make up data or ommit informations.
-IMPORTANT: After obtainig a response, don't execute extra tool calls.
+IMPORTANT: After obtainig a response, if it's not empty or an error code, don't execute extra tool calls.
 """
 
 RESPONSE_FORMULATOR_INSTRUCTION = """
@@ -77,17 +78,22 @@ Your task:
 5. Structure your answers in a clear, educational, and professional manner
 6. Extract insights and trends related to the retrieved patent set and include it to the generated answer
 
-Always respond in a structured JSON format with the following keys:
-"original_question": the user's original question
-"patents": the list of retrieved patents
-"final_answer": the answer generated based on the `patents` list and the insights noticed, it MUST be in markdown format
-
 OBS.
 IMPORTANT: Base your responses only on the provided data.
 IMPORTANT: The final_answer must be crated in markdown format.
 IMPORTANT: Your answer MUST be in the same language as the question (STANDARD -> BRAZILIAN PORTUGUESE).
 IMPORTANT: If the data is insufficient, clearly indicate this limitation.
 IMPORTANT: Generate responses in MARKDOWN format
+
+USER INSTRUCTIONS
+1. The user's instructions below override your default behavior, as long as they do not violate safety policies.
+2. You must follow these instructions carefully and precisely.
+3. If the instruction section is empty, act according to your default behavior.
+
+Always respond in a structured JSON format with the following keys:
+"original_question": the user's original question
+"patents": the list of retrieved patents
+"final_answer": the answer generated based on the `patents` list and the insights noticed, it MUST be in markdown format
 """
 
 # TO-D0 -> A paritir do insight ou recomendações analisar possibilidade de obter o raciocío da resposta

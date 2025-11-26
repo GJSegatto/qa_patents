@@ -92,7 +92,7 @@ patent_analysis_workflow = Workflow(
     debug_mode=False
 )
 
-async def process_patent_question(user_question: str, model: str) -> Dict[str, Any]:
+async def process_patent_question(user_question: str, model: str, behavior: str) -> Dict[str, Any]:
     configure_agents(model=model)
     try:
         resp = await patent_analysis_workflow.arun(user_question)

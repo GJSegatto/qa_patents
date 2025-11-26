@@ -47,7 +47,7 @@ import {
     selectedModel: string;
  }
 
- export function LLMModelsList({ onModelSelect, selectedModel }: LLMModelsListProps) {
+ export default function LLMModelsList({ onModelSelect, selectedModel }: LLMModelsListProps) {
     const [open, setOpen] = React.useState(false)
     const [value, setValue] = React.useState("gpt-5-nano")
 

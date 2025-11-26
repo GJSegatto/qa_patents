@@ -20,6 +20,7 @@ app.add_middleware(
 class ChatRequisition(BaseModel):
     question: str
     model: str
+    behavior: str
 
 class SearchRequisition(BaseModel):
     patentId: str
@@ -40,7 +41,7 @@ async def read_root():
 @app.post("/chat") 
 async def chat(req: ChatRequisition):
     try:
-        response = await process_patent_question(user_question=req.question, model=req.model)
+        response = await process_patent_question(user_question=req.question, model=req.model, behavior=req.behavior)
 
         if isinstance(response, dict) and "final_answer" in response:
             return {"answer": response["final_answer"]}
