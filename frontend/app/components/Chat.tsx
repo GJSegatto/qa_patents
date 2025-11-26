@@ -6,7 +6,7 @@ import MarkdownRenderer from "./chat/MarkdownRenderer";
 import LoadingBubble from "./chat/LoadingBubble";
 import ChatInput from "./chat/ChatInput";
 import useTypewriter from "./chat/useTypewriter";
-import { LLMModelsList } from "./llm-models-list";
+import LLMModelsList from "./llm-models-list";
 import SearchPatent from "./chat/SearchPatent"
 
 type Msg = { role: "user" | "agent"; content: string };
@@ -41,7 +41,7 @@ export default function Chat() {
   useEffect(() => {
     if (isTyping) return
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading, isTyping]);
+  }, [messages.length, isLoading, isTyping]);
 
   async function chat() {
     if (!input.trim() || isLoading || isTyping) return;
@@ -131,7 +131,6 @@ export default function Chat() {
     const application_number = obj.application_number ?? obj.application_number ?? defaultAns
     const title = obj.title ?? obj.title ?? defaultAns
     const abstract = obj.abstract ?? obj.abstract ?? defaultAns
-    const description = obj.description ?? obj.description ?? defaultAns
     const orgname = obj.orgname ?? obj.orgname ?? defaultAns
     
     let md = ""
@@ -141,7 +140,6 @@ export default function Chat() {
     if (publication_date) md += `- **Publicação:** ${publication_date}\n`
     if (application_number) md += `- **Número de aplicação:** ${application_number}\n`
     if (abstract) md += `\n### Resumo:\n${abstract}\n`
-    if (description) md += `\n### Descrição:\n${description}`
     
     return md
   }

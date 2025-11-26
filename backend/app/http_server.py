@@ -61,7 +61,7 @@ async def search(req: SearchRequisition):
 
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                url="http://212.85.22.109:8001/patents/"+req.patentId,
+                url="http://212.85.22.109:8001/patents/"+req.patentId.strip(),
                 headers=headers
             )
 
@@ -72,7 +72,7 @@ async def search(req: SearchRequisition):
 
         patent = resp.json()
 
-        allowed = ["publication_number", "publication_date", "application_number", "title", "abstract", "description", "orgname"]
+        allowed = ["publication_number", "publication_date", "application_number", "title", "abstract", "orgname"]
         filtered = {i: patent.get(i) for i in allowed if i in patent}
 
         return json.dumps({"answer": filtered}, ensure_ascii=False)
