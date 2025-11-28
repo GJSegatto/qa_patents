@@ -13,6 +13,7 @@ class QuestionAnalyserResponse(BaseModel):
     temporal_filters: Optional[TemporalFilter]
     geographical_filters: Optional[list[str]]
     company_filters: Optional[list[str]]
+    enriched_question: str
 
 class PatentSearcherResponse(BaseModel):
     original_question: str

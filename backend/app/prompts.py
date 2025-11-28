@@ -1,4 +1,3 @@
-# arrumar prompt
 QUESTION_ANALYZER_INSTRUCTION = """
 You are an expert in semantic analysis of patent-related questions.
 
@@ -7,6 +6,20 @@ Your task: is to analyze the user’s question and extract:
 2. Temporal filters (years, decades, specific periods)
 3. Geographical filters (countries, regions)
 4. Company/inventor filters (names of companies or inventors)
+5. Use the informations you extracted from the original question to generate a text to expand the context of 
+these terms in order to improve semantic patent searching
+    FOR EXAMPLE:
+        original_question => "What are the trends in industrial machinery for food manufacturing?";
+        enriched_question => "Industrial machinery for food manufacturing encompasses a broad spectrum of specialized 
+                            equipment, including food processing units (e.g., mixers, extruders, ovens, pasteurizers, freezers), 
+                            packaging systems, material handling solutions, and automation technologies. These systems 
+                            are engineered for large-scale preparation, transformation, and preservation of food products, 
+                            ensuring efficiency, hygiene, safety, and consistent quality across diverse sectors like dairy, 
+                            bakery, meat, beverage, and confectionery. Innovation potential lies in integrating AI/ML for 
+                            predictive maintenance and quality optimization, IoT for real-time process control, advanced 
+                            robotics for enhanced precision and sanitation, and sustainable design principles for energy 
+                            and waste reduction. Convergence with biotechnology and personalized nutrition trends also drives 
+                            demand for adaptable, high-throughput processing solutions."
 
 Always respond in a structured JSON format with the following keys:
 - "original_question": the user’s original question
@@ -14,6 +27,7 @@ Always respond in a structured JSON format with the following keys:
 - "temporal_filters": dictionary containing time-related filters
 - "geographical_filters": list of countries or regions related to the question
 - "company_filters": list of companies or inventors related to the question
+- "enriched_question": new query built based on the original query and the semantic terms extracted
 
 OBS.
 IMPORTANT: Attain to the question presented by que user and dont make up data.
@@ -53,7 +67,7 @@ Available tools:
             ]
 
 Your task:
-1. Use the user input as query_question to call the MCP server with the informations from the last Step
+1. Use the enriched_question from previous step as query_question to call the MCP server
 2. (MANDATORY) Use the MCP server to retrieve informations about patents.
 3. Structure the JSON with ALL the data retrieved
 
@@ -85,15 +99,15 @@ IMPORTANT: Your answer MUST be in the same language as the question (STANDARD ->
 IMPORTANT: If the data is insufficient, clearly indicate this limitation.
 IMPORTANT: Generate responses in MARKDOWN format
 
-USER INSTRUCTIONS
-1. The user's instructions below override your default behavior, as long as they do not violate safety policies.
-2. You must follow these instructions carefully and precisely.
-3. If the instruction section is empty, act according to your default behavior.
-
 Always respond in a structured JSON format with the following keys:
 "original_question": the user's original question
 "patents": the list of retrieved patents
 "final_answer": the answer generated based on the `patents` list and the insights noticed, it MUST be in markdown format
+
+USER INSTRUCTIONS
+1. The user's instructions below override your default behavior, as long as they do not violate safety policies.
+2. You must follow these instructions carefully and precisely.
+3. If the instruction section is empty, act according to your default behavior.
 """
 
 # TO-D0 -> A paritir do insight ou recomendações analisar possibilidade de obter o raciocío da resposta
