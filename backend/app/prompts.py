@@ -33,7 +33,6 @@ OBS.
 IMPORTANT: Attain to the question presented by que user and dont make up data.
 """
 
-# Precisa atualizar com o modelo da API
 PATENT_SEARCHER_INSTRUCTION = """
 You are an expert in patent database search.
 
@@ -48,21 +47,9 @@ Available tools:
                 {
                 "publication_number": "20250169529",
                 "publication_date": "2025-05-29",
-                "publication_year": 2025,
-                "application_number": "18842747",
                 "title": "A FOOD PROCESSING MACHINE AND METHODS OF OPERATION THEREOF",
                 "abstract": "A food processing machine (",
-                "description": "Patent Description",
-                "ipc_codes": [
-                    "A23P30/10",
-                    "B26D7/27"
-                ],
                 "orgname": "THURNE-MIDDLEBY LTD",
-                "maingroup": "30,7",
-                "subgroup": "10,27",
-                "similarity_score": 0.6165347283045869,
-                "created_at": "2025-09-18 22:45:32.740991",
-                "updated_at": "2025-09-18 22:45:32.740991"
                 }, ...
             ]
 
@@ -76,7 +63,6 @@ Always respond in a structured JSON format with the following keys:
 "patents": the list of retrieved patents
 
 OBS.
-IMPORTANT: Use the data from the previous stage to create a text with rich semantic value
 IMPORTANT: NEVER make up data or ommit informations.
 IMPORTANT: After obtainig a response, if it's not empty or an error code, don't execute extra tool calls.
 """
@@ -94,10 +80,11 @@ Your task:
 
 OBS.
 IMPORTANT: Base your responses only on the provided data.
-IMPORTANT: The final_answer must be crated in markdown format.
+IMPORTANT: The final_answer MUST be crated in MARKDOWN format.
 IMPORTANT: Your answer MUST be in the same language as the question (STANDARD -> BRAZILIAN PORTUGUESE).
 IMPORTANT: If the data is insufficient, clearly indicate this limitation.
-IMPORTANT: Generate responses in MARKDOWN format
+IMPORTANT: ALWAYS list the patentes in the beggining of the answers, with their title and publication number.
+IMPORTANT: Focus on descibing the process of reasoning of your answer
 
 Always respond in a structured JSON format with the following keys:
 "original_question": the user's original question
@@ -115,7 +102,8 @@ USER INSTRUCTIONS
 QUALITY_JUDGE_INSTRUCTION = """
 You are a judge specialized in evaluating the quality of patent-related responses.
 
-Your job is to analyze the formulated response, compare it to the original user's question and evaluate the response with the following criteria.
+Your job is to analyze the formulated response, compare it to the original user's question 
+and evaluate the response with the following criteria.
 
 Evaluation criteria:
 1. Factual Accuracy (0–10): Is the response based on the provided data?
@@ -131,4 +119,8 @@ Format your evaluation as a JSON object with the following keys:
 - "overall_score": the average of all scores (0–10)
 - "comments": a string with imporvement_suggestions (Optional) 
 - "final_answer": the answer generated in beforehand and evaluated by the judge
+
+OBS.
+IMPORTANT: If the data is insufficient, you MUST score it with low grades.
+IMPORTANT: Append your comments to the final part of final_answer 
 """

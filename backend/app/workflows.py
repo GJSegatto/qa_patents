@@ -49,7 +49,7 @@ def quality_evaluator(step_input: StepInput) -> bool:
         judge_resp = step_input[-1].content
 
         if hasattr(judge_resp, "overall_score") and float(getattr(judge_resp, "overall_score")) >= 7:
-            return True
+            return False
         else:
             return False
     except:
@@ -79,6 +79,8 @@ patent_analysis_workflow = Workflow(
         session_table="workflow_session",
         db_file="tmp/workflow.db"
     ),
+    store_executor_outputs=True,
+    add_workflow_history_to_steps=True,
     steps=[
         Step(name="API Healthy Analysis", executor=is_api_healthy),
         analyze_question_step,
@@ -93,7 +95,7 @@ patent_analysis_workflow = Workflow(
 )
 
 async def process_patent_question(user_question: str, model: str, behavior: str) -> Dict[str, Any]:
-    configure_agents(model=model)
+    configure_agents(model=model, behavior=behavior)
     try:
         resp = await patent_analysis_workflow.arun(user_question)
         content = getattr(resp, "content", resp)
@@ -124,20 +126,3 @@ async def process_patent_question(user_question: str, model: str, behavior: str)
     except Exception as e:
         logger.error("Erro no WORKFLOW")
         return {"error": str(e)}
-
-# TESTE LOCAL
-if __name__ == "__main__":
-    # Teste do workflow
-    test_query = "What are the trends in industrial machinery for food manufacturing?"
-    
-    print("🚀 Testando workflow de análise de patentes...")
-    
-    async def func():
-        await patent_analysis_workflow.aprint_response(
-            input=test_query,
-            mardkown=True,
-            stream=True,
-            stream_events=True
-        )
-    
-    asyncio.run(func())

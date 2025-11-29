@@ -34,21 +34,29 @@ async def search_patents(query_question: str) -> str:
                 headers=headers,
                 follow_redirects=True
             )
-            logger.info("EMBED FEITO")
+            
             try:
                 req_embed.raise_for_status()
             except httpx.HTTPStatusError:
                 return json.dumps({"error": "embed_request_failed", "status": req_embed.status_code, "body": req_embed.text})
 
-            embed_dict = json.loads(req_embed.text)
-            embedding = embed_dict.get("embeddings")
+            logger.info("EMBED FEITO")
 
-            if not embedding:
+            try:
+                embed_dict = json.loads(req_embed.text)
+            except Exception:
+                return json.dumps({"error": "invalid_embed_response", "body": req_embed.text})
+            
+            embedding = embed_dict.get("embeddings")
+            if embedding is None:
                 return json.dumps({"error": "no_embedding_in_response"})
 
             req_sim = await client.post(
                 url="http://212.85.22.109:8001/patents/similarity",
-                json={"embedding": embedding[0]},
+                json={
+                    "embedding": embedding[0],
+                    "max_results": 5
+                },
                 headers=headers
             )
             
@@ -65,9 +73,21 @@ async def search_patents(query_question: str) -> str:
             if patents is None:
                 return json.dumps({"error": "no_similar_patents"})
             
-            logger.info(json.dumps({"patents": patents}, ensure_ascii=False))
+            allowed = ["publication_number", "publication_date", "title", "abstract", "orgname"]
+            filtered_patents = []
 
-            return json.dumps({"patents": patents}, ensure_ascii=False)
+            if isinstance(patents, list):
+                for p in patents:
+                    if not isinstance(p, dict):
+                        continue
+                    filt = {i: p.get(i) for i in allowed if i in p}
+                    filtered_patents.append(filt)
+            else:
+                filtered_patents = []
+
+            logger.info(json.dumps({"patents": filtered_patents}, ensure_ascii=False))
+
+            return json.dumps({"patents": filtered_patents}, ensure_ascii=False)
 
     except Exception as e:
         return json.dumps({"error": str(e)})
