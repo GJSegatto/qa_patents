@@ -64,7 +64,7 @@ async def is_api_healthy(step_input: StepInput) -> StepOutput:
             )
             content = json.loads(resp.text)
             if resp.status_code == 200:
-                if content.get("status") == "healthy" and content.get("database") == "healthy":
+                if content.get("status") == "healthy": #and content.get("database") == "healthy":
                     return StepOutput(content=step_input.input, stop=False)
             else:
                 return StepOutput(content=f"API respondeu com {resp.status_code}: {resp.text}", stop=True)
@@ -91,7 +91,7 @@ patent_analysis_workflow = Workflow(
             max_iterations=2,
         )
     ],
-    debug_mode=False
+    debug_mode=True
 )
 
 async def process_patent_question(user_question: str, model: str, behavior: str) -> Dict[str, Any]:
@@ -126,3 +126,6 @@ async def process_patent_question(user_question: str, model: str, behavior: str)
     except Exception as e:
         logger.error("Erro no WORKFLOW")
         return {"error": str(e)}
+
+#if __name__ == "__main__":
+#    asyncio.run(patent_analysis_workflow.arun("What are the trends in industrial machinery for food manufacturing?"))

@@ -20,7 +20,6 @@ async def search_patents(query_question: str) -> str:
         api_key = getenv('IEL_API_KEY')
         logger.info("COMEÇOU")
 
-
         headers={
             "Accept": "application/json",
             "Authorization": f"Bearer {api_key}"

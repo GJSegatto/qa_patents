@@ -1,5 +1,5 @@
 from agno.agent import Agent
-from agno.models.openai import OpenAIChat
+from agno.models.openai import OpenAIResponses
 from agno.models.google import Gemini
 from agno.tools.reasoning import ReasoningTools
 from agno.tools import tool
@@ -64,15 +64,15 @@ def configure_agents(model: str, behavior: str):
         quality_judge_agent.output_schema=None
     elif 'gpt' in model.lower():
         api_key = getenv('OPENAI_API_KEY')
-        question_analyzer_agent.model=OpenAIChat(id=model, api_key=api_key)
-        patent_searcher_agent.model=OpenAIChat(id=model, api_key=api_key)
-        response_formulator_agent.model=OpenAIChat(id=model, api_key=api_key)
-        quality_judge_agent.model=OpenAIChat(id=model, api_key=api_key)
+        question_analyzer_agent.model=OpenAIResponses(id=model, api_key=api_key)
+        patent_searcher_agent.model=OpenAIResponses(id=model, api_key=api_key)
+        response_formulator_agent.model=OpenAIResponses(id=model, api_key=api_key)
+        quality_judge_agent.model=OpenAIResponses(id=model, api_key=api_key)
     
 
 question_analyzer_agent: Agent = Agent(
     name="QueryAnalyzer",
-    model=OpenAIChat(id="gpt-5-nano"),
+    model=OpenAIResponses(id="gpt-5-nano"),
     tools=[ReasoningTools()],
     instructions=QUESTION_ANALYZER_INSTRUCTION,
     description="Especialista em análise semântica de consultas sobre patentes",
@@ -83,7 +83,7 @@ question_analyzer_agent: Agent = Agent(
 
 patent_searcher_agent: Agent = Agent(
     name="PatentSearcher",
-    model=OpenAIChat(id="gpt-5-nano"),
+    model=OpenAIResponses(id="gpt-5-nano"),
     tools=[
         search_patents
     ],
@@ -97,7 +97,7 @@ patent_searcher_agent: Agent = Agent(
 
 response_formulator_agent: Agent = Agent(
     name="ResponseFormulator",
-    model=OpenAIChat(id="gpt-5-nano"),
+    model=OpenAIResponses(id="gpt-5-nano"),
     tools=[ReasoningTools()],
     instructions=RESPONSE_FORMULATOR_INSTRUCTION,
     description="Especialista em formulação de respostas técnicas sobre patentes",
@@ -109,7 +109,7 @@ response_formulator_agent: Agent = Agent(
 
 quality_judge_agent: Agent = Agent(
     name="QualityJudge",
-    model=OpenAIChat(id="gpt-5-nano"),
+    model=OpenAIResponses(id="gpt-5-nano"),
     tools=[ReasoningTools()],
     instructions=QUALITY_JUDGE_INSTRUCTION,
     description="Juiz especializado em avaliar qualidade de respostas sobre patentes",
@@ -120,6 +120,6 @@ quality_judge_agent: Agent = Agent(
 )
 
 workflow_agent = WorkflowAgent(
-    model=OpenAIChat(id="gpt-5-nano"),
+    model=OpenAIResponses(id="gpt-5-nano"),
     num_history_runs = 3,
 )
