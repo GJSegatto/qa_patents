@@ -45,3 +45,4 @@ node_modules/
 .next/
 backend/app/tmp/
 backend/tmp/
+backend/venv
