@@ -11,7 +11,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware, 
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.0.100:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -28,7 +28,7 @@ class SearchRequisition(BaseModel):
 @app.get("/")
 async def read_root():
     return {
-        "status": "FastAPI Server online e funcionando!",
+        "status": "HTTP Server online e funcionando!",
         "info": "Sistema multi-agente com workflow de análise de patentes ativo",
         "workflow_stages": [
             "1. Análise semântica da consulta",

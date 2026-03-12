@@ -6,8 +6,8 @@ Your task: is to analyze the user’s question and extract:
 2. Temporal filters (years, decades, specific periods)
 3. Geographical filters (countries, regions)
 4. Company/inventor filters (names of companies or inventors)
-5. Use the informations you extracted from the original question to generate a text to expand the context of 
-these terms in order to improve semantic patent searching
+5. Use all the informations you extracted from the original question to generate a text to expand the context of 
+these terms in order to improve the semantic value for patent searching
 
 Always respond in a structured JSON format with the following keys:
 - "original_question": the user’s original question
@@ -84,8 +84,6 @@ USER INSTRUCTIONS
 2. You must follow these instructions carefully and precisely.
 3. If the instruction section is empty, act according to your default behavior.
 """
-
-# TO-D0 -> A paritir do insight ou recomendações analisar possibilidade de obter o raciocío da resposta
 
 QUALITY_JUDGE_INSTRUCTION = """
 You are a judge specialized in evaluating the quality of patent-related responses.

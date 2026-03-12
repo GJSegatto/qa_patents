@@ -8,24 +8,23 @@ mcp = FastMCP("Patent Tools MCP Server")
 @mcp.tool
 async def search_patents(query_question: str) -> str:
     """
-    Busca patentes usando a API externa.
+    Search for patents using external API.
     
     Args:
-        query_question: Texto utlizado para a busca na API
+        query_question: a text in natural language, full of semantic value
 
     Returns:
-        Array de JSON com as patentes similares à query utilizada
+        JSON array with similar patents to the used query
     """
     try:
         api_key = getenv('IEL_API_KEY')
-        logger.info("COMEÇOU")
+        logger.info("SERVIDOR MCP INICIADO")
 
         headers={
             "Accept": "application/json",
             "Authorization": f"Bearer {api_key}"
         }
 
-        # Generate embedding
         async with httpx.AsyncClient() as client:
             req_embed = await client.post(
                 url="http://212.85.22.109:8001/embed",
@@ -39,7 +38,7 @@ async def search_patents(query_question: str) -> str:
             except httpx.HTTPStatusError:
                 return json.dumps({"error": "embed_request_failed", "status": req_embed.status_code, "body": req_embed.text})
 
-            logger.info("EMBED FEITO")
+            logger.info("PROCESSO DE EMBEDDING CONCLUÍDO")
 
             try:
                 embed_dict = json.loads(req_embed.text)
@@ -48,6 +47,7 @@ async def search_patents(query_question: str) -> str:
             
             embedding = embed_dict.get("embeddings")
             if embedding is None:
+                logger.error("ERRO AO REALIZAR EMBEDDING")
                 return json.dumps({"error": "no_embedding_in_response"})
 
             req_sim = await client.post(
@@ -64,16 +64,20 @@ async def search_patents(query_question: str) -> str:
             try:
                 req_sim.raise_for_status()
             except httpx.HTTPStatusError:
+                logger.error("ERRO AO REALIZAR BUSCA")
                 return json.dumps({"error": "sim_request_failed", "status": req_sim.status_code, "body": req_sim.text})
             
             sim_dict = json.loads(req_sim.text)
             patents = sim_dict.get("similar_patents")
 
-            if patents is None:
+            if len(patents) == 0:
+                logger.warning("SEM PATENTES SIMILARES")
                 return json.dumps({"error": "no_similar_patents"})
             
             allowed = ["publication_number", "publication_date", "title", "abstract", "orgname"]
             filtered_patents = []
+
+            logger.info(patents)
 
             if isinstance(patents, list):
                 for p in patents:

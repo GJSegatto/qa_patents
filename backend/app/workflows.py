@@ -1,46 +1,53 @@
-import asyncio, json, re, httpx
+import json, re, httpx
 from agno.utils.log import logger
 from agno.workflow import Step, Workflow, Loop
 from agno.workflow.types import StepInput, StepOutput
-from agno.db.sqlite import SqliteDb
 from typing import Dict, Any
+from agno.db.sqlite import SqliteDb
 from agents import (
     question_analyzer_agent,
     patent_searcher_agent,
     response_formulator_agent,
     quality_judge_agent,
-    workflow_agent
+    workflow_agent, 
+    configure_agents,
 )
-from agents import configure_agents
 
 analyze_question_step = Step(
     name="Question_Analyzer",
     agent=question_analyzer_agent,
-    description="Analisa a pergunta do usuário para obtenção de filtros semânticos."
+    description="Analyze the user's question to obtain semantic filters."
 )
 
 search_patents_step = Step(
     name="Patent_Searcher",
     agent = patent_searcher_agent,
-    description="Realiza a busca na base de dados de patentes."
+    description="Search on patents database."
 )
 
 formulate_response_step = Step(
     name="Formulate_Response",
     agent=response_formulator_agent,
-    description="Gera a resposta para o usuário de acordo com as informações de patentes do passo anterior."
+    description="Produce the answer to user according to the informations gathered on previous step."
 )
 
 judging_step = Step(
     name="Quality_Judge",
     agent=quality_judge_agent,
-    description="Julga a qualidade da resposta de acordo com parâmetros previamente definidos."
+    description="Judges the answer quality based on defined parameters."
 )
 
 def quality_evaluator(step_input: StepInput) -> bool:
     """
-    Avalia se a nota da resposta gerada é boa o suficiente
-    para ser encaminhada ao usuário.
+    Assess the generated answer to check if it's 
+    good enough to be sent to the user.
+
+    Args:
+        step_input: previous step content
+
+    Returns: boolean value that defines:    
+        True -> Stop Workflow   
+        False -> Keep Workflow Running
     """
     try:
         if not step_input:
@@ -49,7 +56,7 @@ def quality_evaluator(step_input: StepInput) -> bool:
         judge_resp = step_input[-1].content
 
         if hasattr(judge_resp, "overall_score") and float(getattr(judge_resp, "overall_score")) >= 7:
-            return False
+            return True
         else:
             return False
     except:
@@ -64,7 +71,7 @@ async def is_api_healthy(step_input: StepInput) -> StepOutput:
             )
             content = json.loads(resp.text)
             if resp.status_code == 200:
-                if content.get("status") == "healthy": #and content.get("database") == "healthy":
+                if content.get("status") == "healthy":
                     return StepOutput(content=step_input.input, stop=False)
             else:
                 return StepOutput(content=f"API respondeu com {resp.status_code}: {resp.text}", stop=True)
@@ -73,14 +80,12 @@ async def is_api_healthy(step_input: StepInput) -> StepOutput:
 
 patent_analysis_workflow = Workflow(
     name="Patent_Analysis_Workflow",
-    description="Workflow do processo completo de análise de patentes e geração de resposta ao usuário.",
+    description="Main Workflow to patent analysis process.",
     agent=workflow_agent,
     db=SqliteDb(
         session_table="workflow_session",
         db_file="tmp/workflow.db"
     ),
-    store_executor_outputs=True,
-    add_workflow_history_to_steps=True,
     steps=[
         Step(name="API Healthy Analysis", executor=is_api_healthy),
         analyze_question_step,
@@ -99,7 +104,7 @@ async def process_patent_question(user_question: str, model: str, behavior: str)
     try:
         resp = await patent_analysis_workflow.arun(user_question)
         content = getattr(resp, "content", resp)
-
+        logger.warning(content)
         if hasattr(content, "final_answer"):
             final = getattr(content, "final_answer")
             return {"final_answer": final}
@@ -126,6 +131,3 @@ async def process_patent_question(user_question: str, model: str, behavior: str)
     except Exception as e:
         logger.error("Erro no WORKFLOW")
         return {"error": str(e)}
-
-#if __name__ == "__main__":
-#    asyncio.run(patent_analysis_workflow.arun("What are the trends in industrial machinery for food manufacturing?"))
