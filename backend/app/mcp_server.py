@@ -2,8 +2,14 @@ from fastmcp import FastMCP
 import json, httpx
 from os import getenv
 from agno.utils.log import logger
+from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
 
 mcp = FastMCP("Patent Tools MCP Server")
+
+embedding_model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
+index_name = "patent_index_2"
+dimensions = 768
 
 @mcp.tool
 async def search_patents(query_question: str) -> str:
@@ -17,83 +23,43 @@ async def search_patents(query_question: str) -> str:
         JSON array with similar patents to the used query
     """
     try:
-        api_key = getenv('IEL_API_KEY')
-        logger.info("SERVIDOR MCP INICIADO")
+        qdrant_key = getenv('QDRANT_API_KEY')
 
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
+        # Gera o embedding com o modelo selecionado
+        embedding = embedding_model.encode(query_question).tolist()
 
-        async with httpx.AsyncClient() as client:
-            req_embed = await client.post(
-                url="http://212.85.22.109:8001/embed",
-                json={'text': query_question},
-                headers=headers,
-                follow_redirects=True
-            )
-            
-            try:
-                req_embed.raise_for_status()
-            except httpx.HTTPStatusError:
-                return json.dumps({"error": "embed_request_failed", "status": req_embed.status_code, "body": req_embed.text})
+        if embedding is None:
+            logger.error("ERRO AO REALIZAR EMBEDDING")
+            return json.dumps({"error": "embbeding_is_none"})
+        
+        client = QdrantClient(
+            url="https://a364e048-1fd9-4c55-88fc-9c70d8b2ca1b.us-east4-0.gcp.cloud.qdrant.io:6333",
+            api_key=qdrant_key,
+        )
 
-            logger.info("PROCESSO DE EMBEDDING CONCLUÍDO")
+        #Requisição para a base de dados
+        response = client.query_points(
+            collection_name=index_name,
+            query=embedding,
+            limit=5
+        )
 
-            try:
-                embed_dict = json.loads(req_embed.text)
-            except Exception:
-                return json.dumps({"error": "invalid_embed_response", "body": req_embed.text})
-            
-            embedding = embed_dict.get("embeddings")
-            if embedding is None:
-                logger.error("ERRO AO REALIZAR EMBEDDING")
-                return json.dumps({"error": "no_embedding_in_response"})
+        points = list()
+        points = [{"score": p.score, "payload": p.payload} for p in response.points]
 
-            req_sim = await client.post(
-                url="http://212.85.22.109:8001/patents/similarity",
-                json={
-                    "embedding": embedding[0],
-                    "max_results": 5
-                },
-                headers=headers
-            )
-            
-            logger.info("PATENTES FEITO")
+        logger.warning(points)
 
-            try:
-                req_sim.raise_for_status()
-            except httpx.HTTPStatusError:
-                logger.error("ERRO AO REALIZAR BUSCA")
-                return json.dumps({"error": "sim_request_failed", "status": req_sim.status_code, "body": req_sim.text})
-            
-            sim_dict = json.loads(req_sim.text)
-            patents = sim_dict.get("similar_patents")
+        if len(points) == 0:
+            logger.warning("ARRAY DE PATENTES VAZIO")
+            return json.dumps({"error": "empty_patents_array"})
 
-            if len(patents) == 0:
-                logger.warning("SEM PATENTES SIMILARES")
-                return json.dumps({"error": "no_similar_patents"})
-            
-            allowed = ["publication_number", "publication_date", "title", "abstract", "orgname"]
-            filtered_patents = []
-
-            logger.info(patents)
-
-            if isinstance(patents, list):
-                for p in patents:
-                    if not isinstance(p, dict):
-                        continue
-                    filt = {i: p.get(i) for i in allowed if i in p}
-                    filtered_patents.append(filt)
-            else:
-                filtered_patents = []
-
-            logger.info(json.dumps({"patents": filtered_patents}, ensure_ascii=False))
-
-            return json.dumps({"patents": filtered_patents}, ensure_ascii=False)
-
+        return json.dumps({"patents": points}, ensure_ascii=False)
+    
     except Exception as e:
+        logger.error(e)
         return json.dumps({"error": str(e)})
     
+import asyncio
 if __name__ == "__main__":
+    #asyncio.run(search_patents("What are the trend in manufacturing food systems?"))
     mcp.run(transport="http", host="127.0.0.1", port=9000)
