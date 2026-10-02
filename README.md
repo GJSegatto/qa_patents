@@ -1,4 +1,4 @@
-# Patent Intelligence Assistant
+# Question Answering System with Intelligent Agents for Patent Analysis
 
 For my Computer Engineering undergraduate thesis, I developed a Question Answering system that used a Multi-Agent architecture to retrieve relevant information from patent databases. In this project, I used React for the frontend and Python (FastAPI) for the backend, as well as an MCP (Model Context Protocol) server to standardize the use of tools by the intelligent agents implemented through the Agno framework. The final goal of the project was, through the intelligence of the agents, to be able to answer complex questions and generate insights for users from a knowledge base as complex as patent documents. Project completed in July 2026, presented as my undergraduate thesis, and receiving the highest possible grade.
 
